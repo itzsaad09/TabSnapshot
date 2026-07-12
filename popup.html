@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TabSnapshot - Workspace Manager</title>
+  <style>
+    /* Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --bg-gradient: linear-gradient(135deg, #050a18, #0c162b);
+      --card-bg: rgba(12, 22, 43, 0.7);
+      --card-border: rgba(10, 226, 204, 0.12);
+      --text-main: #e2f1ff;
+      --text-muted: #8ba2c0;
+      --primary: #0084ff;
+      --primary-hover: #006cdb;
+      --primary-glow: rgba(0, 132, 255, 0.35);
+      --accent: #0ae2cc;
+      --accent-hover: #08c8b4;
+      --accent-glow: rgba(10, 226, 204, 0.35);
+      --danger: #ff4a76;
+      --danger-hover: #e0325d;
+      --success: #0df3c9;
+    }
+
+    /* Core Styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+      width: 380px;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      padding: 16px;
+      overflow-x: hidden;
+      min-height: 480px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+
+    h1 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(to right, #ffffff, #a5f3fc);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .badge.free {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+    }
+
+    .badge.premium {
+      background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(99, 102, 241, 0.15));
+      border-color: rgba(236, 72, 153, 0.3);
+      color: #f472b6;
+      box-shadow: 0 0 8px rgba(236, 72, 153, 0.2);
+    }
+
+    /* Main CTA Banner */
+    .cta-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+    }
+
+    .capture-btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 14px var(--primary-glow);
+    }
+
+    .capture-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+    }
+
+    .capture-btn:active {
+      transform: translateY(1px);
+    }
+
+    /* Premium Guardrail Card */
+    .premium-lock-card {
+      background: linear-gradient(135deg, rgba(236, 72, 153, 0.12), rgba(15, 23, 42, 0.8));
+      border: 1px solid rgba(236, 72, 153, 0.25);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 16px;
+      display: none;
+      align-items: center;
+      gap: 12px;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(5px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .premium-lock-icon {
+      font-size: 1.5rem;
+    }
+
+    .premium-lock-info {
+      flex-grow: 1;
+    }
+
+    .premium-lock-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #f472b6;
+      margin-bottom: 2px;
+    }
+
+    .premium-lock-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .premium-btn {
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .premium-btn:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 15px rgba(236, 72, 153, 0.6);
+    }
+
+    /* Snapshot List Section */
+    .section-title-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .section-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+    }
+
+    .snapshot-count {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .snapshot-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 280px;
+      overflow-y: auto;
+      padding-right: 2px;
+      flex-grow: 1;
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 30px 10px;
+      text-align: center;
+      color: var(--text-muted);
+      gap: 10px;
+      background: var(--card-bg);
+      border: 1px dashed var(--card-border);
+      border-radius: 12px;
+    }
+
+    .empty-icon {
+      font-size: 2rem;
+      opacity: 0.6;
+    }
+
+    .empty-title {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-main);
+    }
+
+    .empty-desc {
+      font-size: 0.75rem;
+    }
+
+    /* Snapshot Item Card */
+    .snapshot-item {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .snapshot-item:hover {
+      border-color: rgba(99, 102, 241, 0.3);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .snapshot-row-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .snapshot-title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      max-width: 200px;
+    }
+
+    .snapshot-name-input {
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 2px 4px;
+      margin-left: -4px;
+      border-radius: 4px;
+      width: 100%;
+      transition: background 0.2s;
+    }
+
+    .snapshot-name-input:focus {
+      background: rgba(255, 255, 255, 0.1);
+      outline: 1px solid var(--primary);
+    }
+
+    .snapshot-meta {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .snapshot-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .action-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .action-btn svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    .action-btn.restore {
+      color: var(--success);
+    }
+
+    .action-btn.restore:hover {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.3);
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.2);
+    }
+
+    .action-btn.delete {
+      color: var(--danger);
+    }
+
+    .action-btn.delete:hover {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.3);
+      box-shadow: 0 0 8px rgba(239, 68, 68, 0.2);
+    }
+
+    .snapshot-details-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .detail-tag {
+      font-size: 0.7rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--text-muted);
+    }
+
+    /* Toast Notification */
+    .toast-container {
+      position: fixed;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: rgba(17, 24, 39, 0.95);
+      border: 1px solid var(--primary);
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+      color: var(--text-main);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      transform: translateY(10px);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Footer Config */
+    footer {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .footer-author {
+      font-weight: 500;
+      color: #92b5db;
+    }
+
+    .footer-author span {
+      color: #ffffff;
+      font-weight: 600;
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 16px;
+      margin-top: 4px;
+    }
+
+    .footer-links a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.25s ease;
+      text-shadow: 0 0 4px var(--accent-glow);
+    }
+
+    .footer-links a:hover {
+      color: #ffffff;
+      text-shadow: 0 0 8px var(--accent);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="logo-container">
+      <div class="logo-icon">
+        <img src="icons/icon32.png" alt="icon.png">
+      </div>
+      <h1>TabSnapshot</h1>
+    </div>
+  </header>
+
+  <!-- Capture Section -->
+  <div class="cta-card">
+    <button id="capture-btn" class="capture-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="16"></line>
+        <line x1="8" y1="12" x2="16" y2="12"></line>
+      </svg>
+      Capture Current Setup
+    </button>
+  </div>
+
+  <!-- Snapshot Section Title -->
+  <div class="section-title-container">
+    <div class="section-title">Saved Workspaces</div>
+    <div id="snapshot-count" class="snapshot-count">0 saved</div>
+  </div>
+
+  <!-- Saved Snapshot List -->
+  <div id="snapshot-list" class="snapshot-list">
+    <!-- Rendered dynamically -->
+  </div>
+
+  <!-- Footer Actions -->
+  <footer>
+    <div>TabSnapshot &copy; 2026 &bull; Workspace Manager</div>
+    <div class="footer-author">By <span>Hafiz Muhammad Saad</span></div>
+    <div class="footer-links">
+      <a href="https://github.com/itzsaad09" target="_blank">GitHub</a>
+      <a href="https://www.linkedin.com/in/itzsaad09/" target="_blank">LinkedIn</a>
+    </div>
+  </footer>
+
+  <!-- Toast Notification -->
+  <div class="toast-container">
+    <div id="toast" class="toast">
+      <span id="toast-message">Workspace captured successfully!</span>
+    </div>
+  </div>
+
+  <!-- Script entrypoint -->
+  <script src="popup.js"></script>
+</body>
+
+</html>
