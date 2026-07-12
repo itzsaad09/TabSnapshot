@@ -184,9 +184,7 @@ async function restoreWorkspace(snapshot) {
     throw new Error("Invalid snapshot structure or empty snapshot.");
   }
 
-  // Track the original windows to close them after restoration
-  const oldWindows = await chrome.windows.getAll({ windowTypes: ['normal'] });
-  const oldWindowIds = oldWindows.map(w => w.id);
+
 
   for (const winData of snapshot.windows) {
     const createParams = {
@@ -289,14 +287,7 @@ async function restoreWorkspace(snapshot) {
     }
   }
 
-  // Close original windows to perform a clean workspace swap
-  for (const oldId of oldWindowIds) {
-    try {
-      await chrome.windows.remove(oldId);
-    } catch (e) {
-      console.warn(`Could not close original window ${oldId}:`, e);
-    }
-  }
+
 }
 
 /**
